@@ -1,5 +1,9 @@
 import express, { json } from "express"
 import cors from "cors"
+import db from "./src/lib/db.js"
+import { sql } from "drizzle-orm"
+import 'dotenv/config' 
+
 
 const app = express();
 
@@ -11,12 +15,25 @@ app.use(cors({
     
 }))
 
-// Routes 
-app.get("/healthz", (req,res)=> {
-    res.json({
-        "Status" : "Server is healthy :)",
-    })
+// Heatlth route
+app.get("/healthz", async (req,res)=> {
+    try {
+        await db.execute(sql`SELECT 1`)
+
+        res.json({
+            success: true,
+            message: "Server is healthy :)"
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Server is unhealthy :(",
+            error: error.message
+        })
+    }
 })
+
 
 
 
