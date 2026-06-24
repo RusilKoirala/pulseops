@@ -3,7 +3,7 @@ import cors from "cors"
 import db from "./src/lib/db.js"
 import { sql } from "drizzle-orm"
 import 'dotenv/config' 
-
+import monitorRoutes from "./src/routes/monitor.js"
 
 const app = express();
 
@@ -33,8 +33,7 @@ app.get("/healthz", async (req,res)=> {
         })
     }
 })
-
-
+app.use("/api/monitors", monitorRoutes)
 
 
 app.listen(3000, ()=>{
