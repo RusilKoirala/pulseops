@@ -1,0 +1,1 @@
+ALTER TABLE "monitors" ADD COLUMN "interval" integer DEFAULT 600 NOT NULL;

@@ -4,6 +4,7 @@ import db from "./src/lib/db.js"
 import { sql } from "drizzle-orm"
 import 'dotenv/config' 
 import monitorRoutes from "./src/routes/monitor.js"
+import { startSchedular } from "./src/services/checker.js"
 
 const app = express();
 
@@ -36,6 +37,9 @@ app.get("/healthz", async (req,res)=> {
 app.use("/api/monitors", monitorRoutes)
 
 
-app.listen(3000, ()=>{
-    console.log(`Server is running at port http://localhost:${process.env.PORT || 3000}`)
+const PORT = process.env.PORT || 3000
+app.listen(PORT,  async()=>{
+    console.log(`Server is running at port http://localhost:${PORT}`)
+    await startSchedular()
 })
+

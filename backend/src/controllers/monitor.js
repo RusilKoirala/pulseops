@@ -2,12 +2,12 @@ import {eq, desc} from "drizzle-orm"
 import db from "../lib/db.js"
 import { monitors, monitorChecks } from "../db/schema.js"
 import { z } from "zod"
-
+import { restartScheduler } from "../services/checker.js"
 
 const CreateMonitorSchema = z.object({
     name: z.string().min(1),
     url: z.string().url(),
-    interval: z.number().min(1).max(60),
+    interval: z.number().min(30).max(86400),  
 })
 
 
@@ -32,6 +32,7 @@ async function DeleteMonitor(req, res) {
     catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
+    await restartScheduler()
 }
 
 
@@ -44,6 +45,7 @@ async function CreateMonitor(req, res) {
     catch (error) {
         res.status(400).json({ success: false, message: error.message })
     }
+    await restartScheduler()
 }
 
 
