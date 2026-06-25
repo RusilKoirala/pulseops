@@ -1,11 +1,14 @@
 import {Router} from "express";
-import  {ListAllMonitor, DeleteMonitor, CreateMonitor, ListMonitorChecks, MonitorCheck}  from "../controllers/monitor.js";
+import  {ListAllMonitor, DeleteMonitor, CreateMonitor, ListMonitorChecks, MonitorStatus}  from "../controllers/monitor.js";
+import { authMiddleware } from "../middleware/auth.js";
+
 const router = Router();
 
-router.get("/", ListAllMonitor)
-router.post("/", CreateMonitor )
-router.delete("/:id",DeleteMonitor)
-router.get("/:id/checks", ListMonitorChecks )
-router.get("/:id/check", MonitorCheck )
+router.get("/", authMiddleware, ListAllMonitor)
+router.post("/",authMiddleware, CreateMonitor )
+router.delete("/:id",authMiddleware, DeleteMonitor)
+router.get("/:id/checks", authMiddleware, ListMonitorChecks )
+
+router.get("/:id/status", authMiddleware, MonitorStatus )
 
 export default router;

@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm"
 
 export const monitors = pgTable("monitors", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

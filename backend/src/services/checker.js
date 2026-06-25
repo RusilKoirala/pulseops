@@ -26,12 +26,7 @@ export async function performHealthCheck(monitor) {
       responseTime = Date.now() - startTime
         status = "down"
     }
-    await db.insert(monitorChecks).values({
-        monitorId: monitor.id,
-        status,
-        statuscode,
-        responseTime
-    })
+    await db.insert(monitorChecks).values({ monitorId: monitor.id, status, responseTime })
   console.log(`Checked ${monitor.name} - Status: ${status}, Status Code: ${statuscode}, Response Time: ${responseTime}ms`)
 }
 
@@ -41,9 +36,10 @@ export async function startSchedular(monitor) {
     activeTimers.forEach((timer)=>clearInterval(timer))
     activeTimers.clear()
 
-    const activeMonitors = await db.select().from(monitors).where(monitors.isActive, true)
+    const activeMonitors = await db.select().from(monitors)  
 
-    for (const monitor of activeMonitors) {
+
+    for (const monitor of activeMonitors) { 
         performHealthCheck(monitor)
 
         const timer = setInterval(() => {

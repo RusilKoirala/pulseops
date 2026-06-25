@@ -14,8 +14,10 @@ app.use(express.json())
 
 // Cors setting
 app.use(cors({
-    
+  origin: "http://localhost:5173",
+  credentials: true,
 }))
+
 
 // Heatlth route
 app.get("/healthz", async (req,res)=> {
