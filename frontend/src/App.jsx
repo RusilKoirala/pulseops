@@ -7,6 +7,9 @@ import { Navbar } from "@/components/navbar"
 import { Dashboard } from "@/pages/Dashboard"
 import { Login } from "@/pages/Login"
 import { Toaster } from "sonner"
+import { MonitorDetail } from "@/pages/MonitorDetail"
+
+import { Signup } from "./pages/Signup"
 
 function App() {
   
@@ -22,6 +25,12 @@ function App() {
             </ProtectedRoute>
             }
           />
+          <Route path="/monitors/:id" element={
+            <ProtectedRoute>
+              <MonitorDetail/>
+            </ProtectedRoute>
+          }/>
+          <Route path="/signup" element={<Signup/>}/>
           <Route path="/login" element={<Login/>}/>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>

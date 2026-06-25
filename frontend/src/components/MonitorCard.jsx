@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
-export function MonitorCard({ monitor, onDelete }) {
+export function MonitorCard({ monitor, onDelete, refreshKey }) {
   const [lastCheck, setLastCheck] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     async function fetchLastCheck() {
@@ -14,13 +16,16 @@ export function MonitorCard({ monitor, onDelete }) {
       } catch (err) {}
     }
     fetchLastCheck()
-  }, [monitor.id])
+  }, [monitor.id, refreshKey])
 
   const isUp = lastCheck?.status === "up"
 
   return (
     <div className="flex items-center justify-between rounded-xl border bg-card px-5 py-4">
-      <div className="flex items-center gap-3">
+      <div
+        className="flex items-center gap-3 cursor-pointer"
+        onClick={() => navigate(`/monitors/${monitor.id}`)}
+      >
         <span className={`size-3 rounded-full ${lastCheck ? (isUp ? "bg-green-500" : "bg-red-500") : "bg-gray-400"}`} />
         <div>
           <p className="font-medium">{monitor.name}</p>
@@ -31,8 +36,7 @@ export function MonitorCard({ monitor, onDelete }) {
       <div className="flex items-center gap-4">
         {lastCheck && (
           <div className="text-right text-sm text-muted-foreground">
-            <p>{isUp ? "Up" : "Down"}</p>
-            <p>{lastCheck.responseTime}ms</p>
+            <p>{isUp ? "Up" : "Down"} {lastCheck.responseTime}ms</p>
           </div>
         )}
         <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>

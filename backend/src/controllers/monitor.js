@@ -4,11 +4,12 @@ import db from "../lib/db.js"
 import { monitors, monitorChecks } from "../db/schema.js"
 import { z } from "zod"
 import { restartScheduler } from "../services/checker.js"
+import { performHealthCheck } from "../services/checker.js"
 
 const CreateMonitorSchema = z.object({
     name: z.string().min(1),
     url: z.string().url(),
-    interval: z.number().min(30).max(86400),  
+    interval: z.number().min(300).max(86400),  // min 5 mins, max 24 hours
 })
 
 
@@ -100,6 +101,18 @@ async function MonitorStatus(req, res) {
     }
 }
 
+async function ManualCheck(req, res) {
+    const { id } = req.params
+    try {
+        const [monitor] = await db.select().from(monitors).where(eq(monitors.id, id))
+        if (!monitor) return res.status(404).json({ success: false, message: "Monitor not found" })
+        await performHealthCheck(monitor)
+        res.json({ success: true, message: "Check triggered" })
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 
 
 export {
@@ -107,5 +120,6 @@ export {
     DeleteMonitor,
     CreateMonitor,
     ListMonitorChecks,
-    MonitorStatus
+    MonitorStatus, 
+    ManualCheck
 }
