@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm"
 import 'dotenv/config' 
 import monitorRoutes from "./src/routes/monitor.js"
 import { startSchedular } from "./src/services/checker.js"
+import userRoutes from "./src/routes/user.js"
 
 const app = express();
 
@@ -34,8 +35,10 @@ app.get("/healthz", async (req,res)=> {
         })
     }
 })
-app.use("/api/monitors", monitorRoutes)
 
+
+app.use("/api/monitors", monitorRoutes)
+app.use("/api/users", userRoutes)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT,  async()=>{

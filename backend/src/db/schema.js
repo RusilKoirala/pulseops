@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core"
+
 import { sql } from "drizzle-orm"
-import { integer } from "drizzle-orm/gel-core"
+
 
 export const monitors = pgTable("monitors", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -18,4 +19,10 @@ export const monitorChecks = pgTable("monitor_checks", {
   checkedAt: timestamp("checked_at").defaultNow().notNull(),
 })
 
-
+export const user = pgTable("users", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  isVerified: sql`boolean NOT NULL DEFAULT false`,
+})
