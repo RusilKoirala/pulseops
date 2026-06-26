@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {Signup, Login, Logout, Profile, Delete, VerifyEmail, ResendVerification, ChangePassword} from "../controllers/user.js";
+import {Signup, Login, Logout, Profile, Delete, VerifyEmail, ResendVerification, ChangePassword, DemoLogin} from "../controllers/user.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
@@ -21,5 +21,10 @@ router.put("/password", authMiddleware, ChangePassword)
 // Verification
 router.get("/verify-email", VerifyEmail);
 router.post("/resend-verification", authMiddleware, ResendVerification);
+
+
+// Demo 
+
+router.post("/demo", DemoLogin)
 
 export default router;

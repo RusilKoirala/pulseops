@@ -35,6 +35,9 @@ export function Navbar() {
             </>
           ) : (
             <>
+              <Link to="/demo">
+                <Button size="sm" variant="outline" className="rounded-full">Try Demo</Button>
+              </Link>
               <Link to="/signup">
                 <Button size="sm" className="rounded-full">Sign up</Button>
               </Link>

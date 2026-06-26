@@ -1,7 +1,7 @@
 import db from "../lib/db.js"
 import bcrypt from "bcrypt"
 import { user } from "../db/schema.js"
-import { z } from "zod"
+import {  z } from "zod"
 import { CreateJwtToken } from "../lib/jwt.js"
 import { eq } from "drizzle-orm"
 import { sendVerificationEmail } from "../lib/email.js"
@@ -70,7 +70,7 @@ async function Login(req, res) {
 
         const jwt_token = CreateJwtToken({ id: existingUser.id, email: existingUser.email })
 
-        const { password: _pw, id: _id, isVerified: _v, ...userWithoutDetail } = existingUser
+        const { password: _pw, id: _id, ...userWithoutDetail } = existingUser
 
         res.cookie("token", jwt_token, {
             httpOnly: true,
@@ -188,5 +188,43 @@ async function ChangePassword(req, res) {
   }
 }
 
+async function DemoLogin(req,res) {
+    const DEMO_EMAIL = "demo@pulseops.dev"
+    const DEMO_PASSWORD = "demo1234"
 
-export { Signup, Login, Delete, Logout, Profile, VerifyEmail, ResendVerification , ChangePassword}
+    try {
+        let demoUser = await db.query.user.findFirst({
+            where: (u,{eq})=> eq(u.email, DEMO_EMAIL)
+        })
+
+        if (!demoUser) {
+            const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10)
+            const [created] = await db.insert(user)
+                .values({
+                    name: "Demo User",
+                    email: DEMO_EMAIL,
+                    password: hashedPassword,
+                    isVerified: true
+                })
+                .returning()
+            demoUser = created
+        }
+
+        const jwt_token = CreateJwtToken({id: demoUser.id, email:demoUser.email})
+
+        res.cookie("token", jwt_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        })
+        const {password:_, id:_id, ...safe}= demoUser
+        res.json({
+            success: true,
+            data: safe,
+        })
+    } catch (error) {
+        res.status(500).json({success: false, message: error.message})
+    }
+}
+
+export { Signup, Login, Delete, Logout, Profile, VerifyEmail, ResendVerification , ChangePassword, DemoLogin}

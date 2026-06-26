@@ -4,12 +4,23 @@ import api from "../lib/api";
 
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
 
 export function Settings() {
-    const { user } = useAuth()
 
+
+    const {user, logout} = useAuth()
     const [pwForm, setPwForm] = useState({currentPassword: "", newPassword: "", confirmPassword: ""})
     const [pwLoading, setLoading] = useState(false)
+
+    
+    const navigate = useNavigate()
+
+    async function handleLogout() {
+        await logout()
+        navigate("/login")
+    }
 
     async function handleChangePassword(e) {
         e.preventDefault()
@@ -37,7 +48,16 @@ export function Settings() {
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
         <h1 className="text-2xl font-bold">Settings</h1>
 
-        {/* Account Info */}
+        {/* Go user goo */}
+        <div className="rounded-2xl border bg-card px-6 py-5">
+            <h2 className="font-semibold mb-1">Session</h2>
+            <p className="text-sm text-muted-foreground mb-4">You are signed in as {user?.email}</p>
+            <Button variant="outline" onClick={handleLogout}>
+                Log out
+            </Button>
+        </div>
+
+        {/* account Info */}
         <div className="rounded-2xl border bg-card px-6 py-5">
           <h2 className="font-semibold mb-4">Account</h2>
           <div className="flex flex-col gap-3">
@@ -68,7 +88,7 @@ export function Settings() {
           </div>
         </div>
 
-        {/* Change Password */}
+        {/* cccchange Password */}
         <div className="rounded-2xl border bg-card px-6 py-5">
           <h2 className="font-semibold mb-4">Change Password</h2>
           <form onSubmit={handleChangePassword} className="flex flex-col gap-3">
@@ -102,7 +122,7 @@ export function Settings() {
           </form>
         </div>
 
-        {/* Danger Zone */}
+        {/* daaaanger Zone */}
         <div className="rounded-2xl border border-red-500/20 bg-card px-6 py-5">
           <h2 className="font-semibold text-red-500 mb-1">Danger Zone</h2>
           <p className="text-sm text-muted-foreground mb-4">
