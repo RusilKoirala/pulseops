@@ -8,7 +8,7 @@ import { Dashboard } from "@/pages/Dashboard"
 import { Login } from "@/pages/Login"
 import { Toaster } from "sonner"
 import { MonitorDetail } from "@/pages/MonitorDetail"
-
+import { Settings } from "@/pages/Settings"
 import { Signup } from "./pages/Signup"
 import { VerifyEmail } from "./pages/VerifyEmail"
 
@@ -31,6 +31,11 @@ function App() {
               <MonitorDetail/>
             </ProtectedRoute>
           }/>
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
           <Route path="/verify-email" element={<VerifyEmail/>}/>
           <Route path="/signup" element={<Signup/>}/>
           <Route path="/login" element={<Login/>}/>

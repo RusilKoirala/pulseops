@@ -164,4 +164,29 @@ async function ResendVerification(req, res) {
     }
 }
 
-export { Signup, Login, Delete, Logout, Profile, VerifyEmail, ResendVerification }
+async function ChangePassword(req, res) {
+  const { currentPassword, newPassword } = req.body
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: "Both fields are required" })
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ success: false, message: "New password must be at least 6 characters" })
+  }
+  try {
+    const [found] = await db.select().from(user).where(eq(user.id, req.user.id))
+    if (!found) return res.status(404).json({ success: false, message: "User not found" })
+
+    const valid = await bcrypt.compare(currentPassword, found.password)
+    if (!valid) return res.status(400).json({ success: false, message: "Current password is incorrect" })
+
+    const hashed = await bcrypt.hash(newPassword, 10)
+    await db.update(user).set({ password: hashed }).where(eq(user.id, req.user.id))
+
+    res.json({ success: true, message: "Password updated" })
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+
+export { Signup, Login, Delete, Logout, Profile, VerifyEmail, ResendVerification , ChangePassword}

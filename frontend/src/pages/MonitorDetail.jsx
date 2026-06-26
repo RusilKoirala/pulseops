@@ -15,6 +15,13 @@ export function MonitorDetail() {
     const [loading, setLoading] = useState(true)
     const [checking, setChecking] = useState(false)
 
+    function formatInterval(seconds) {
+      if (seconds >= 86400) return `${seconds / 86400}d`
+      if (seconds >= 3600) return `${seconds / 3600}h`
+      if (seconds >= 60) return `${seconds / 60}m`
+      return `${seconds}s`
+    }
+
     async function fetchAll() {
         try {
             const [monitorRes,statusRes, checkRes]= await Promise.all([
@@ -129,6 +136,6 @@ export function MonitorDetail() {
         </div>
 
       </div>
-    </div>
+        </div>
   )
 }
