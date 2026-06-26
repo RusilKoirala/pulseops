@@ -12,7 +12,7 @@ import { Settings } from "@/pages/Settings"
 import { Signup } from "./pages/Signup"
 import { VerifyEmail } from "./pages/VerifyEmail"
 import { Demo } from "./pages/Demo"
-import { Landing } from "./pages/LandingPage"
+import { Landing } from "./pages/Landing"
 
 function App() {
   
