@@ -1,14 +1,20 @@
 import {Router} from "express";
-import {Signup, Login, Logout, Profile, Delete} from "../controllers/user.js";
+import {Signup, Login, Logout, Profile, Delete, VerifyEmail, ResendVerification} from "../controllers/user.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 
+// logging in and out 
 router.post("/signup", Signup);
-router.delete("/delete",authMiddleware, Delete);
+router.post("/login",Login);
+router.post("/logout", authMiddleware, Logout);
 
-router.post("/login",Login)
-router.post("/logout", authMiddleware, Logout)
-router.get("/profile", authMiddleware, Profile)
+// Profile info and delete
+router.delete("/delete",authMiddleware, Delete);
+router.get("/profile", authMiddleware, Profile);
+
+// Verification
+router.get("/verify-email", VerifyEmail);
+router.post("/resend-verification", authMiddleware, ResendVerification);
 
 export default router;

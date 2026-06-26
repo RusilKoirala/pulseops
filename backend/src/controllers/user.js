@@ -2,9 +2,12 @@
 import db from "../lib/db.js"
 import bcrypt from "bcrypt"
 import { user } from "../db/schema.js"
-import {z} from "zod"
+import {success, z} from "zod"
 import { CreateJwtToken } from "../lib/jwt.js"
 import { eq } from "drizzle-orm"
+import { sendVerificationEmail } from "../lib/email.js"
+
+
 
 
 
@@ -47,6 +50,16 @@ async function Signup(req, res) {
             })
         .returning();
         const { password: _, ...userWithoutPassword } = newUser;
+
+        const token = crypto.randomUUID()
+        const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+        await db.update(user)
+            .set({ verificationToken: token, verificationTokenExpiry: expiry })
+            .where(eq(user.id, newUser.id))
+        
+        await sendVerificationEmail(email, token)
+
         res.status(201).json({ success: true, data: userWithoutPassword })
     }
     catch (error) {
@@ -137,4 +150,58 @@ async function Profile(req,res) {
         res.json({ success: false, message: error.message })
     }
 }
-export { Signup, Login , Delete, Logout, Profile}
+
+async function VerifyEmail(req,res) {
+    const { token } = req.query
+    if (!token) return res.status(400).json({
+        success: false,
+        message: "Token required"
+    })
+    try {
+        const [found] = await db.select().from(user).where(eq(user.verificationToken, token))
+        if (!found) {
+            res.status(400).json({
+                success: false,
+                message:"Invalid Token",
+            })
+        }
+        if (new Date()> new Date(found.verificationTokenExpiry)) {
+            return res.status(400).json({success:false, message:"Token expired"})
+        }
+
+        await db.update(user)
+            .set({isVerified: true,
+                verificationToken: null,
+                verificationTokenExpiry: null,
+            })
+            where(eq(user.id, found.id))
+        
+        res.json({ success:true, message:"Email Verified"})
+    } catch (error) {
+        res.json({ success:false, message:error})
+    }
+}
+
+
+
+async function ResendVerification(req,res) {
+    const {id}= req.user
+    try {
+        const [found] = await db.select().from(user).where(eq(user.id,id))
+        if (!found) return res.status(404).json({success: false, message: "User not found"})
+        if (found.isVerified) return res.status(400).json({ success: false, message: "Already Verified"})
+        
+        const token = crypto.randomUUID()
+        const expiry = new Date(Date.now+ 24*60*60*1000)
+
+        await db.update(user)
+            .set({verificationToken: token, verificationTokenExpiry: expiry})
+            .where(eq(user.id, id))
+        
+        await sendVerificationEmail(found.email, token)
+        res.json({success: true, message: "Verification Email Sent"})
+    } catch (error) {
+        res.json({success: false, message: error})
+    }
+}
+export { Signup, Login , Delete, Logout, Profile, VerifyEmail, ResendVerification}

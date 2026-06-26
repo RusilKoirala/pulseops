@@ -24,10 +24,27 @@ export async function performHealthCheck(monitor) {
     }
     catch (error) {
       responseTime = Date.now() - startTime
-        status = "down"
     }
-    await db.insert(monitorChecks).values({ monitorId: monitor.id, status, responseTime })
-  console.log(`Checked ${monitor.name} - Status: ${status}, Status Code: ${statuscode}, Response Time: ${responseTime}ms`)
+    
+    // get prev check
+    const [prev]= await db.select().from(monitorChecks)
+        .where(eq(monitorChecks.monitorId,monitor.id))
+        .orderBy(desc(monitorChecks.checkedAt))
+        .limit(1)
+    
+     await db.insert(monitorChecks).values({ monitorId: monitor.id, status, responseTime })
+
+  // send alert if status flipped and notifications are on
+  if (monitor.notificationsEnabled && prev) {
+    const [owner] = await db.select().from(user).where(eq(user.id, monitor.userId))
+    if (owner) {
+      if (prev.status === "up" && status === "down") {
+        await sendDownAlert(owner.email, monitor.name, monitor.url)
+      } else if (prev.status === "down" && status === "up") {
+        await sendRecoveryAlert(owner.email, monitor.name, monitor.url)
+      }
+    }
+  }
 }
 
 const activeTimers = new Map()

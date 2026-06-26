@@ -10,6 +10,7 @@ export const monitors = pgTable("monitors", {
   url: text("url").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   interval: integer("interval").notNull().default(600),
+  notificationsEnabled: boolean("notifications_enabled").default(true).notNull(),
 })
 
 export const monitorChecks = pgTable("monitor_checks", {
@@ -27,4 +28,6 @@ export const user = pgTable("users", {
   password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
+  verificationToken: text("verification_token"),
+  verificationTokenExpiry: timestamp("verification_token_expiry")
 })

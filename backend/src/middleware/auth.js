@@ -5,9 +5,8 @@ export function authMiddleware (req, res, next ) {
    
     const token = req.headers.cookie
     ?.split(";")
-    .find(cookie => cookie.trim()
-        .startsWith("token="))
-        ?.split("=")[1];
+    .find(cookie => cookie.trim().startsWith("token="))
+    ?.split("=").slice(1).join("=");
    
     if (!token) {
         return res.status(401).json({ success: false, message: "Unauthorized" });

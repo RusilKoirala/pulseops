@@ -1,4 +1,4 @@
-import {eq, desc} from "drizzle-orm"
+import {eq, desc, and} from "drizzle-orm"
 import db from "../lib/db.js"
 
 import { monitors, monitorChecks } from "../db/schema.js"
@@ -32,7 +32,7 @@ async function DeleteMonitor(req, res) {
     const { id } = req.params
 
     try {
-        const deletedMonitor = await db.delete(monitors).where(eq(monitors.id, id), eq(monitors.userId, userId)).returning()
+        const deletedMonitor = await db.delete(monitors).where(and(eq(monitors.id,id), eq(monitors.userId,userId)))
         res.json({ success: true, data: deletedMonitor })
     }
     catch (error) {
