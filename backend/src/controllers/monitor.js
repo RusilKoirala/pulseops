@@ -60,7 +60,7 @@ async function ListMonitorChecks(req, res) {
     const { id } = req.params
 
     try {
-        const checks = await db.select().from(monitorChecks).where(eq(monitorChecks.monitorId, id)).orderBy(desc(monitorChecks.checkedAt)).limit(10)
+        const checks = await db.select().from(monitorChecks).where(eq(monitorChecks.monitorId, id)).orderBy(desc(monitorChecks.checkedAt)).limit(50)
         res.json({ success: true, data: checks })
 
     }
@@ -68,6 +68,8 @@ async function ListMonitorChecks(req, res) {
         res.status(500).json({ success: false, message: error.message })
     }
 }
+
+
 
 async function MonitorStatus(req, res) {
     const { id } = req.params

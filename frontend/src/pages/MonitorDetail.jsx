@@ -4,16 +4,28 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import {Button} from "@/components/ui/button"
 import { toast } from "sonner";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+
 
 export function MonitorDetail() {
     const {id}= useParams()
     const navigate = useNavigate()
+
 
     const [monitor, setMonitor]= useState(null)
     const [status, setStatus] = useState(null)
     const [checks, setChecks]= useState([])
     const [loading, setLoading] = useState(true)
     const [checking, setChecking] = useState(false)
+
+    const chartConfig = {
+        responseTime: {
+          label: "Response Time",
+          color: "var(--chart-1)"
+        }
+    }
+    
 
     function formatInterval(seconds) {
       if (seconds >= 86400) return `${seconds / 86400}d`
@@ -63,6 +75,14 @@ export function MonitorDetail() {
     )
     const isUp = checks[0]?.status === "up"
 
+    const chartData = [...checks]
+      .reverse()
+      .map((check, i)=> ({
+        index:i+1,
+        time: new Date(check.checkedAt).toLocaleDateString([], { hour:"2-digit", minute:"2-digit"}),
+        responseTime: check.status === "up" ? Number(check.responseTime) : null,
+      }))
+
      return (
         <div className="min-h-screen bg-background pt-24 px-4">
             <div className="max-w-4xl mx-auto">
@@ -106,6 +126,53 @@ export function MonitorDetail() {
           </div>
         </div>
 
+
+        {chartData.length > 1 && (
+          <div className="rounded-2xl border bg-card px-6 py-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold">Response Time</h2>
+                <span className="text-xs text-muted-foreground">Last {checks.length} checks</span>
+              </div>
+
+              <ChartContainer config={chartConfig}>
+                  <LineChart accessibilityLayer data={chartData} margin={{left: 8, right: 8}}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3"/>
+                    <XAxis
+                      dataKey="time"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{fontSize:11}}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{fontSize:11}}
+                      tickFormatter={(v)=> `${v}ms`}
+                      width={52}
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value)=>[`${value}ms`, "Response time"]}
+                          labelFormatter={(label)=> `At ${label}`}
+                        />
+                      }
+                    />
+                    <Line
+                          type="monotone"
+                          dataKey="responseTime"
+                          stroke="var(--color-responseTime)"
+                          strokeWidth={2}
+                          dot={false}
+                          connectNulls={false}
+                    />
+                  </LineChart>
+              </ChartContainer>
+          </div>
+        )}
 
         <div className="rounded-2xl border bg-card px-6 py-5">
           <div className="flex items-center justify-between mb-4">
