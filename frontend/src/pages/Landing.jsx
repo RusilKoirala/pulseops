@@ -8,9 +8,9 @@ import { DotPattern } from "@/components/ui/dot-pattern"
 import { AnimatedList } from "@/components/ui/animated-list"
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Bento backgrounds — each fills the flex-1 container naturally
-// A gradient-to-transparent fade at the bottom (built into BentoCard) blends
-// into the icon/text section below.
+// Bento backgrounds — each fills the flex-1 container naturally.
+// BentoCard has a gradient-to-transparent fade at the bottom of the background
+// slot so content blends cleanly into the icon/text section below.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MONITORS = [
@@ -92,7 +92,6 @@ const CHART_BARS = [
 function ChartBg() {
   return (
     <div className="px-5 pt-5 pb-2 flex flex-col h-full">
-      {/* top label row */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] font-mono text-muted-foreground">Response time (ms)</span>
         <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-red-500">
@@ -100,7 +99,6 @@ function ChartBg() {
           outage detected
         </span>
       </div>
-      {/* bars */}
       <div className="flex items-end gap-1 w-full" style={{ height: "9rem" }}>
         {CHART_BARS.map((bar, i) => (
           <div key={i} className="flex-1 flex flex-col justify-end h-full">
@@ -115,7 +113,6 @@ function ChartBg() {
           </div>
         ))}
       </div>
-      {/* x axis */}
       <div className="flex justify-between text-[10px] text-muted-foreground/60 font-mono mt-1.5 border-t border-border/50 pt-1.5">
         <span>12h ago</span>
         <span>9h ago</span>
@@ -130,7 +127,6 @@ function ChartBg() {
 function CheckBg() {
   return (
     <div className="flex flex-col items-center justify-center gap-5 pt-8 pb-2">
-      {/* pulse rings */}
       <div className="relative flex items-center justify-center">
         <div className="absolute size-32 rounded-full border border-green-500/10 animate-ping" style={{ animationDuration: "3s" }} />
         <div className="absolute size-24 rounded-full border border-green-500/15" />
@@ -138,7 +134,6 @@ function CheckBg() {
         <div className="size-12 rounded-full bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center">
           <CheckCircle2 className="size-6 text-green-500" />
         </div>
-        {/* zap badge */}
         <div className="absolute -top-1 -right-1 size-6 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-sm">
           <Zap className="size-3 text-yellow-500" />
         </div>
@@ -147,7 +142,6 @@ function CheckBg() {
         <p className="text-sm font-semibold">Check triggered</p>
         <p className="text-xs text-muted-foreground mt-1 font-mono">api.myapp.com · 178ms · HTTP 200</p>
       </div>
-      {/* status pill */}
       <div className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/[0.06] px-4 py-1.5 text-xs font-medium text-green-600 dark:text-green-400">
         <span className="size-1.5 rounded-full bg-green-500" />
         Healthy
@@ -157,16 +151,16 @@ function CheckBg() {
 }
 
 const SECURITY_ITEMS = [
-  { label: "JWT authentication",  detail: "Signed, expiring tokens"      },
-  { label: "bcrypt passwords",    detail: "12 rounds, salted"            },
-  { label: "httpOnly cookies",    detail: "XSS-safe session storage"     },
-  { label: "Email verification",  detail: "Required on sign-up"          },
+  { label: "JWT authentication", detail: "Signed, expiring tokens"   },
+  { label: "bcrypt passwords",   detail: "12 rounds, salted"         },
+  { label: "httpOnly cookies",   detail: "XSS-safe session storage"  },
+  { label: "Email verification", detail: "Required on sign-up"       },
 ]
 
 function SecureBg() {
   return (
     <div className="px-6 pt-6 flex flex-col gap-2.5">
-      {SECURITY_ITEMS.map((item, i) => (
+      {SECURITY_ITEMS.map((item) => (
         <div
           key={item.label}
           className="flex items-center gap-3 rounded-xl border bg-muted/40 px-4 py-3 backdrop-blur"
