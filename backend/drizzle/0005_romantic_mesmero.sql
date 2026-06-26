@@ -1,1 +1,0 @@
-ALTER TABLE "monitors" RENAME COLUMN "nofitications_enabled" TO "notifications_enabled";

@@ -9,7 +9,8 @@ import { performHealthCheck } from "../services/checker.js"
 const CreateMonitorSchema = z.object({
     name: z.string().min(1),
     url: z.string().url(),
-    interval: z.number().min(300).max(86400),  // min 5 mins, max 24 hours
+    interval: z.number().min(300).max(86400),
+    notificationsEnabled: z.boolean().default(true),
 })
 
 
@@ -42,10 +43,10 @@ async function DeleteMonitor(req, res) {
 
 
 async function CreateMonitor(req, res) {
-    const { name, url, interval } = CreateMonitorSchema.parse(req.body)
+    const { name, url, interval, notificationsEnabled } = CreateMonitorSchema.parse(req.body)
     const { id: userId} = req.user
     try {
-        const [newMonitor] = await db.insert(monitors).values({ name, url , interval, userId}).returning()
+        const [newMonitor] = await db.insert(monitors).values({ name, url, interval, userId, notificationsEnabled }).returning()
         res.status(201).json({ success: true, data: newMonitor })
     }
     catch (error) {

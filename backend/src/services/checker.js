@@ -1,6 +1,7 @@
-import {eq} from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import db from '../lib/db.js'
-import { monitorChecks, monitors } from '../db/schema.js'
+import { monitorChecks, monitors, user } from '../db/schema.js'
+import { sendDownAlert, sendRecoveryAlert } from '../lib/email.js'
 
 
 export async function performHealthCheck(monitor) {

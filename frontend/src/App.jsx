@@ -10,6 +10,7 @@ import { Toaster } from "sonner"
 import { MonitorDetail } from "@/pages/MonitorDetail"
 
 import { Signup } from "./pages/Signup"
+import { VerifyEmail } from "./pages/VerifyEmail"
 
 function App() {
   
@@ -30,6 +31,7 @@ function App() {
               <MonitorDetail/>
             </ProtectedRoute>
           }/>
+          <Route path="/verify-email" element={<VerifyEmail/>}/>
           <Route path="/signup" element={<Signup/>}/>
           <Route path="/login" element={<Login/>}/>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

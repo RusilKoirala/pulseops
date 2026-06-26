@@ -28,7 +28,7 @@ const PRESETS = [
 ]
 
 export function AddMonitorModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ name: "", url: "" })
+  const [form, setForm] = useState({ name: "", url: "", notificationsEnabled: true })
   const [intervalInput, setIntervalInput] = useState("5m")
   const [loading, setLoading] = useState(false)
 
@@ -143,6 +143,28 @@ export function AddMonitorModal({ onClose, onCreated }) {
               onChange={(e) => setIntervalInput(e.target.value)}
               required
             />
+          </div>
+
+          <div className="flex items-center justify-between px-1 py-2">
+            <div>
+              <p className="text-sm font-medium">Email alerts</p>
+              <p className="text-xs text-muted-foreground">Notify me when this monitor goes down or recovers</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.notificationsEnabled}
+              onClick={() => setForm(f => ({ ...f, notificationsEnabled: !f.notificationsEnabled }))}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                form.notificationsEnabled ? "bg-green-500" : "bg-input"
+              }`}
+            >
+              <span
+                className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                  form.notificationsEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
 
           <div className="flex gap-2 mt-2">

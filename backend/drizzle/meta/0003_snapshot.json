@@ -1,5 +1,5 @@
 {
-  "id": "1875ae38-c6e2-42e1-86bc-257937824c73",
+  "id": "42c3e6c9-f6f9-484f-9b42-771426548e05",
   "prevId": "313b02c2-e79f-4f94-a007-1560d1cf2646",
   "version": "7",
   "dialect": "postgresql",
@@ -103,6 +103,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": 600
+        },
+        "notifications_enabled": {
+          "name": "notifications_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         }
       },
       "indexes": {},
@@ -168,6 +175,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "verification_token": {
+          "name": "verification_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verification_token_expiry": {
+          "name": "verification_token_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

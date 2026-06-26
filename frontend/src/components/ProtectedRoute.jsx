@@ -10,5 +10,8 @@ export function ProtectedRoute({ children }) {
     if (!user){
         return <Navigate to="/login"/>
     }
+    if (!user.isVerified) {
+        return <Navigate to="/verify-email"/>
+    }
     return children
 }
