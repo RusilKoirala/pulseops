@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -28,9 +28,19 @@ const PRESETS = [
 ]
 
 export function AddMonitorModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ name: "", url: "", notificationsEnabled: true })
+  const [form, setForm] = useState({ name: "", url: "", notificationsEnabled: true, teamId: "" })
   const [intervalInput, setIntervalInput] = useState("5m")
   const [loading, setLoading] = useState(false)
+  const [teams, setTeams] = useState([])
+
+  async function fetchTeams() {
+    try {
+      const res = await api.get("/teams")
+      setTeams(res.data.data)
+    } catch (err) {
+      // ignore
+    }
+  }
 
   function selectPreset(seconds) {
     // show back as human readable
@@ -77,7 +87,9 @@ export function AddMonitorModal({ onClose, onCreated }) {
 
     setLoading(true)
     try {
-      await api.post("/monitors", { ...form, interval })
+      const payload = { ...form, interval }
+      if (!payload.teamId) delete payload.teamId
+      await api.post("/monitors", payload)
       toast.success("Monitor added!")
       onCreated()
     } catch (err) {
@@ -86,6 +98,10 @@ export function AddMonitorModal({ onClose, onCreated }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchTeams()
+  }, [])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -113,6 +129,22 @@ export function AddMonitorModal({ onClose, onCreated }) {
               required
             />
           </div>
+
+          {teams.length > 0 && (
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Save to</label>
+              <select
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                value={form.teamId}
+                onChange={(e) => setForm({ ...form, teamId: e.target.value })}
+              >
+                <option value="">My Personal</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>{team.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">

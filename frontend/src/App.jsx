@@ -14,6 +14,8 @@ import { VerifyEmail } from "./pages/VerifyEmail"
 import { Demo } from "./pages/Demo"
 import { Landing } from "./pages/Landing"
 import { Teams } from "./pages/Teams"
+import { TeamDetail } from "./pages/TeamDetail"
+
 
 function App() {
   
@@ -39,7 +41,16 @@ function App() {
               <Settings />
             </ProtectedRoute>
           } />
-          <Route path="/teams" element={<Teams/>}/>
+          <Route path="/teams" element={
+            <ProtectedRoute>
+              <Teams/>
+            </ProtectedRoute>
+            }/>
+          <Route path="/teams/:teamId" element={
+            <ProtectedRoute>
+              <TeamDetail/>
+            </ProtectedRoute>
+            }/>
           <Route path="/verify-email" element={<VerifyEmail/>}/>
           <Route path="/demo" element={<Demo/>}/>
           <Route path="/signup" element={<Signup/>}/>

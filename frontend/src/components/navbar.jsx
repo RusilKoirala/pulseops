@@ -3,8 +3,7 @@ import { ModeSwitcher } from "@/components/ui/theme-toggle"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { toast } from "sonner"
-import { Settings} from "lucide-react"
-
+import { Settings, Users } from "lucide-react"
 
 export function Navbar() {
   const { user, logout } = useAuth()
@@ -26,6 +25,12 @@ export function Navbar() {
           <ModeSwitcher />
           {user ? (
             <>
+              <Link to="/teams">
+                <Button size="sm" variant="ghost" className="rounded-full">
+                  <Users className="w-4 h-4 mr-1" />
+                  Teams
+                </Button>
+              </Link>
               <Link to="/settings">
                 <Button size="sm" variant="ghost" className="rounded-full"><Settings/></Button>
               </Link>
