@@ -6,13 +6,17 @@ import {Button} from "@/components/ui/button"
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { StatusPageSettings } from "@/components/StatusPageSettings"
+import { Globe, ExternalLink } from "lucide-react"
+
 
 
 export function MonitorDetail() {
     const {id}= useParams()
     const navigate = useNavigate()
 
-
+    const [showStatusPageModal, setShowStatusPageModal] = useState(false)
+    const [statusPages, setStatusPages] = useState([])
     const [monitor, setMonitor]= useState(null)
     const [status, setStatus] = useState(null)
     const [checks, setChecks]= useState([])
@@ -33,24 +37,32 @@ export function MonitorDetail() {
       if (seconds >= 60) return `${seconds / 60}m`
       return `${seconds}s`
     }
-
-    async function fetchAll() {
-        try {
-            const [monitorRes,statusRes, checkRes]= await Promise.all([
-                api.get("/monitors"),
-                api.get(`/monitors/${id}/status`),
-                api.get(`/monitors/${id}/checks`),
-            ])
-            const found = monitorRes.data.data.find(m=>m.id===id)
-            setMonitor(found)
-            setStatus(statusRes.data.data)
-            setChecks(checkRes.data.data)
-        } catch (error) {
-            toast.error("Failed to load monitor")
-        } finally {
-            setLoading(false)
-        }
+    async function fetchStatusPages() {
+    try {
+      const res = await api.get(`/status-pages/monitor/${id}`)
+      setStatusPages(res.data.data)
+    } catch (error) {
+      console.error("Failed to fetch status pages:", error)
     }
+    }
+    async function fetchAll() {
+    try {
+      const [monitorRes, statusRes, checkRes] = await Promise.all([
+        api.get("/monitors"),
+        api.get(`/monitors/${id}/status`),
+        api.get(`/monitors/${id}/checks`),
+      ])
+      const found = monitorRes.data.data.find(m => m.id === id)
+      setMonitor(found)
+      setStatus(statusRes.data.data)
+      setChecks(checkRes.data.data)
+      fetchStatusPages() // Add this line
+    } catch (error) {
+      toast.error("Failed to load monitor")
+    } finally {
+      setLoading(false)
+  }
+}
     async function trigger() {
         setChecking(true)
         try {
@@ -94,9 +106,15 @@ export function MonitorDetail() {
                  >
                     Back
                 </button>
+          <div className="flex items-center gap-2">
           <Button size="sm" onClick={trigger} disabled={checking}>
             {checking ? "Checking..." : "Check now"}
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowStatusPageModal(true)}>
+            <Globe className="w-4 h-4 mr-2" />
+            Status Page
+          </Button>
+          </div>
         </div>
 
 
@@ -202,7 +220,39 @@ export function MonitorDetail() {
           )}
         </div>
 
+        {statusPages.length > 0 && (
+          <div className="rounded-2xl border bg-card px-6 py-5 mb-6">
+            <h2 className="font-semibold mb-4">Status Pages</h2>
+            <div className="space-y-2">
+              {statusPages.map((page) => (
+                <div key={page.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div>
+                    <p className="font-medium">{page.title}</p>
+                    <p className="text-xs text-muted-foreground">Public Status Page</p>
+                  </div>
+                  <a
+                    href={`/status/${page.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                  >
+                    View <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
+
+        {showStatusPageModal && (
+          <StatusPageSettings
+            monitor={monitor}
+            onClose={() => setShowStatusPageModal(false)}
+            onCreated={fetchStatusPages}
+          />
+        )}
         </div>
   )
 }

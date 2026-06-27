@@ -1,6 +1,6 @@
 
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { AuthProvider } from "@/context/AuthContext"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { Navbar } from "@/components/navbar"
@@ -15,49 +15,58 @@ import { Demo } from "./pages/Demo"
 import { Landing } from "./pages/Landing"
 import { Teams } from "./pages/Teams"
 import { TeamDetail } from "./pages/TeamDetail"
+import { StatusPage } from "./pages/StatusPage"
 
-
-function App() {
+function AppContent() {
+  const location = useLocation()
+  const isStatusPage = location.pathname.startsWith("/status/")
   
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Toaster richColors postition="top-right"/>
-        <Navbar/> 
-        <Routes>
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard/>
-            </ProtectedRoute>
-            }
-          />
-          <Route path="/monitors/:id" element={
-            <ProtectedRoute>
-              <MonitorDetail/>
-            </ProtectedRoute>
+    <AuthProvider>
+      <Toaster richColors postition="top-right"/>
+      {!isStatusPage && <Navbar/>}
+      <Routes>
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard/>
+          </ProtectedRoute>
+          }
+        />
+        <Route path="/monitors/:id" element={
+          <ProtectedRoute>
+            <MonitorDetail/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/teams" element={
+          <ProtectedRoute>
+            <Teams/>
+          </ProtectedRoute>
           }/>
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/teams" element={
-            <ProtectedRoute>
-              <Teams/>
-            </ProtectedRoute>
-            }/>
-          <Route path="/teams/:teamId" element={
-            <ProtectedRoute>
-              <TeamDetail/>
-            </ProtectedRoute>
-            }/>
-          <Route path="/verify-email" element={<VerifyEmail/>}/>
-          <Route path="/demo" element={<Demo/>}/>
-          <Route path="/signup" element={<Signup/>}/>
-          <Route path="/login" element={<Login/>}/>
-          <Route path="/" element={<Landing />} />
-        </Routes>
-      </AuthProvider>
+        <Route path="/teams/:teamId" element={
+          <ProtectedRoute>
+            <TeamDetail/>
+          </ProtectedRoute>
+          }/>
+        <Route path="/verify-email" element={<VerifyEmail/>}/>
+        <Route path="/demo" element={<Demo/>}/>
+        <Route path="/signup" element={<Signup/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/status/:id" element={<StatusPage />} />
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </AuthProvider>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   )
 }

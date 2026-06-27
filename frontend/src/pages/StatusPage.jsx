@@ -28,10 +28,8 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
+      </div>)
   }
-
   if (!data) {
     return (
       <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
@@ -61,7 +59,6 @@ export function StatusPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="text-center mb-8">
           {statusPage.logoUrl && (
             <img src={statusPage.logoUrl} alt="Logo" className="w-16 h-16 mx-auto mb-4 rounded-lg" />
@@ -72,7 +69,6 @@ export function StatusPage() {
           )}
         </div>
 
-        {/* Current Status */}
         <div className="bg-card rounded-2xl border p-6 mb-6 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className={`w-4 h-4 rounded-full ${isUp ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
@@ -83,7 +79,6 @@ export function StatusPage() {
           <p className="text-muted-foreground">{statusPage.monitor.url}</p>
         </div>
 
-        {/* Active Incidents */}
         {activeIncidents.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -122,7 +117,6 @@ export function StatusPage() {
           </div>
         )}
 
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-card rounded-xl border p-4">
             <p className="text-sm text-muted-foreground mb-1">Uptime</p>
@@ -136,53 +130,58 @@ export function StatusPage() {
           </div>
         </div>
 
-        {/* Response Time Chart */}
         {chartData.length > 1 && (
           <div className="bg-card rounded-2xl border p-6 mb-6">
             <h3 className="font-semibold mb-4">Response Time</h3>
-            <ChartContainer config={chartConfig} className="h-64">
-              <LineChart accessibilityLayer data={chartData}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="time"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 11 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v) => `${v}ms`}
-                  width={52}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) => [`${value}ms`, "Response time"]}
-                      labelFormatter={(label) => `At ${label}`}
-                    />
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="responseTime"
-                  stroke={statusPage.primaryColor || "#3b82f6"}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls={false}
-                />
-              </LineChart>
-            </ChartContainer>
+            <div className="w-full h-64">
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <LineChart 
+                  accessibilityLayer 
+                  data={chartData} 
+                  className="w-full h-full"
+                  margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="time"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 11 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(v) => `${v}ms`}
+                    width={52}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value) => [`${value}ms`, "Response time"]}
+                        labelFormatter={(label) => `At ${label}`}
+                      />
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="responseTime"
+                    stroke={statusPage.primaryColor || "#3b82f6"}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </div>
           </div>
         )}
 
-        {/* Footer */}
         <div className="text-center text-sm text-muted-foreground">
-          <p>Powered by PulseOps</p>
+          Powered by <u><Link to="/">PulseOps</Link></u>
         </div>
       </div>
     </div>

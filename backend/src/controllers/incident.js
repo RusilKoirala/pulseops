@@ -1,4 +1,4 @@
-import db from "../lib/db"
+import  db  from "../lib/db.js"
 import { incidents, incidentUpdates, monitors } from "../db/schema.js"
 import { eq, desc, and } from "drizzle-orm"
 
@@ -6,11 +6,15 @@ export const createIncident = async (req, res) => {
   try {
     const { monitorId, title, description } = req.body
     
-    const monitor = await db.query.monitors.findFirst({
-      where: eq(monitors.id, monitorId)
-    })
+    const monitor = await db.select().from(monitors).where(eq(monitors.id, monitorId)).limit(1)
     
-    if (!monitor || (monitor.userId !== req.user.id && !monitor.teamId)) {
+    if (monitor.length === 0) {
+      return res.status(404).json({ error: "Monitor not found" })
+    }
+    
+    const foundMonitor = monitor[0]
+    
+    if (foundMonitor.userId !== req.user.id && !foundMonitor.teamId) {
       return res.status(403).json({ error: "Not authorized" })
     }
     
@@ -23,6 +27,7 @@ export const createIncident = async (req, res) => {
     
     res.status(201).json({ data: incident })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Failed to create incident" })
   }
 }
@@ -31,18 +36,11 @@ export const getIncidentsByMonitor = async (req, res) => {
   try {
     const { monitorId } = req.params
     
-    const incidentsList = await db.query.incidents.findMany({
-      where: eq(incidents.monitorId, monitorId),
-      orderBy: desc(incidents.startedAt),
-      with: {
-        updates: {
-          orderBy: desc(incidentUpdates.createdAt)
-        }
-      }
-    })
+    const incidentsList = await db.select().from(incidents).where(eq(incidents.monitorId, monitorId)).orderBy(desc(incidents.startedAt))
     
     res.json({ data: incidentsList })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Failed to fetch incidents" })
   }
 }
@@ -52,18 +50,18 @@ export const updateIncident = async (req, res) => {
     const { id } = req.params
     const { status, message } = req.body
     
-    const incident = await db.query.incidents.findFirst({
-      where: eq(incidents.id, id),
-      with: {
-        monitor: true
-      }
-    })
+    const incidentResult = await db.select().from(incidents).where(eq(incidents.id, id)).limit(1)
     
-    if (!incident) {
+    if (incidentResult.length === 0) {
       return res.status(404).json({ error: "Incident not found" })
     }
     
-    if (incident.monitor.userId !== req.user.id && !incident.monitor.teamId) {
+    const incident = incidentResult[0]
+    
+    const monitorResult = await db.select().from(monitors).where(eq(monitors.id, incident.monitorId)).limit(1)
+    const monitor = monitorResult[0]
+    
+    if (monitor.userId !== req.user.id && !monitor.teamId) {
       return res.status(403).json({ error: "Not authorized" })
     }
     
@@ -85,6 +83,7 @@ export const updateIncident = async (req, res) => {
     
     res.json({ data: updatedIncident })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Failed to update incident" })
   }
 }
