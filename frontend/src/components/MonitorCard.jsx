@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
-export function MonitorCard({ monitor, onDelete, refreshKey }) {
+export function MonitorCard({ monitor, onDelete, onEdit, refreshKey }) {
   const [lastCheck, setLastCheck] = useState(null)
   const navigate = useNavigate()
 
@@ -39,7 +39,10 @@ export function MonitorCard({ monitor, onDelete, refreshKey }) {
             <p>{isUp ? "Up" : "Down"} {lastCheck.responseTime}ms</p>
           </div>
         )}
-        <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onEdit}>Edit</Button>
+          <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
+        </div>
       </div>
     </div>
   )

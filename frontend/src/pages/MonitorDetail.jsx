@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { StatusPageSettings } from "@/components/StatusPageSettings"
-import { Globe, ExternalLink } from "lucide-react"
+import { AddMonitorModal } from "@/components/AddMonitorModal"
+import { Globe, ExternalLink, Pencil } from "lucide-react"
 
 
 
@@ -16,6 +17,7 @@ export function MonitorDetail() {
     const navigate = useNavigate()
 
     const [showStatusPageModal, setShowStatusPageModal] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
     const [statusPages, setStatusPages] = useState([])
     const [monitor, setMonitor]= useState(null)
     const [status, setStatus] = useState(null)
@@ -96,8 +98,49 @@ export function MonitorDetail() {
       }))
 
      return (
+      
         <div className="min-h-screen bg-background pt-24 px-4">
-            <div className="max-w-4xl mx-auto">
+          {showStatusPageModal && (
+          <StatusPageSettings
+            monitor={monitor}
+            onClose={() => setShowStatusPageModal(false)}
+            onCreated={fetchStatusPages}
+          />
+        )}
+        {showEditModal && (
+          <AddMonitorModal
+            monitor={monitor}
+            onClose={() => setShowEditModal(false)}
+            onUpdated={() => {
+              setShowEditModal(false)
+              fetchAll()
+            }}
+          />
+        )}
+       
+        <div className="max-w-4xl mx-auto">
+               {statusPages.length > 0 && (
+          <div className="rounded-2xl border bg-card px-6 py-5 mb-6">
+            <div className="space-y-2">
+              {statusPages.map((page) => (
+                <div key={page.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div>
+                    <p className="font-medium">{page.title}</p>
+                    <p className="text-xs text-muted-foreground">Public Status Page</p>
+                  </div>
+                  <a
+                    href={`/status/${page.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                  >
+                    View <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
              <div className="flex items-center justify-between mb-6">
                 <button
@@ -109,6 +152,10 @@ export function MonitorDetail() {
           <div className="flex items-center gap-2">
           <Button size="sm" onClick={trigger} disabled={checking}>
             {checking ? "Checking..." : "Check now"}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowEditModal(true)}>
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit
           </Button>
           <Button size="sm" variant="outline" onClick={() => setShowStatusPageModal(true)}>
             <Globe className="w-4 h-4 mr-2" />
@@ -220,39 +267,11 @@ export function MonitorDetail() {
           )}
         </div>
 
-        {statusPages.length > 0 && (
-          <div className="rounded-2xl border bg-card px-6 py-5 mb-6">
-            <h2 className="font-semibold mb-4">Status Pages</h2>
-            <div className="space-y-2">
-              {statusPages.map((page) => (
-                <div key={page.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div>
-                    <p className="font-medium">{page.title}</p>
-                    <p className="text-xs text-muted-foreground">Public Status Page</p>
-                  </div>
-                  <a
-                    href={`/status/${page.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
-                  >
-                    View <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        
 
-      </div>
+        </div>
 
-        {showStatusPageModal && (
-          <StatusPageSettings
-            monitor={monitor}
-            onClose={() => setShowStatusPageModal(false)}
-            onCreated={fetchStatusPages}
-          />
-        )}
+        
         </div>
   )
 }

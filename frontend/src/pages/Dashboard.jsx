@@ -10,6 +10,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [editingMonitor, setEditingMonitor] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   async function fetchMonitors(silent = false) {
@@ -35,6 +36,11 @@ export function Dashboard() {
     } catch (err) {
       toast.error("Failed to delete monitor")
     }
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingMonitor(null)
   }
 
   useEffect(() => {
@@ -73,6 +79,10 @@ export function Dashboard() {
                 monitor={monitor}
                 refreshKey={refreshKey}
                 onDelete={() => deleteMonitor(monitor.id)}
+                onEdit={() => {
+                  setEditingMonitor(monitor)
+                  setShowModal(true)
+                }}
               />
             ))}
           </div>
@@ -81,8 +91,10 @@ export function Dashboard() {
 
       {showModal && (
         <AddMonitorModal
-          onClose={() => setShowModal(false)}
-          onCreated={() => { setShowModal(false); fetchMonitors(true) }}
+          monitor={editingMonitor}
+          onClose={closeModal}
+          onCreated={() => { closeModal(); fetchMonitors(true) }}
+          onUpdated={() => { closeModal(); fetchMonitors(true) }}
         />
       )}
     </div>

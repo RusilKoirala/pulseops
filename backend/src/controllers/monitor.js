@@ -13,6 +13,13 @@ const CreateMonitorSchema = z.object({
     teamId: z.string().optional(),
 })
 
+const UpdateMonitorSchema = z.object({
+    name: z.string().min(1).optional(),
+    url: z.string().url().optional(),
+    interval: z.number().min(300).max(86400).optional(),
+    notificationsEnabled: z.boolean().optional(),
+})
+
 async function ListAllMonitor(req, res) {
     const {id : userId } = req.user
     try {
@@ -42,6 +49,36 @@ async function ListAllMonitor(req, res) {
     }
 }
 
+async function UpdateMonitor(req, res) {
+    const { id: userId} = req.user
+    const { id } = req.params
+    const updateData = UpdateMonitorSchema.parse(req.body)
+
+    try {
+        // Get monitor first
+        const [monitor] = await db.select().from(monitors).where(eq(monitors.id, id))
+        if (!monitor) return res.status(404).json({ success: false, message: "Monitor not found" })
+
+        // Check access
+        let hasAccess = monitor.userId === userId
+        if (!hasAccess && monitor.teamId) {
+            const [membership] = await db.select().from(teamMembers).where(
+                and(eq(teamMembers.teamId, monitor.teamId), eq(teamMembers.userId, userId))
+            )
+            hasAccess = !!membership
+        }
+
+        if (!hasAccess) return res.status(403).json({ success: false, message: "Not authorized" })
+
+        const [updatedMonitor] = await db.update(monitors).set(updateData).where(eq(monitors.id, id)).returning()
+        res.json({ success: true, data: updatedMonitor })
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: error.message })
+    }
+    await restartScheduler()
+}
+
 async function DeleteMonitor(req, res) {
     const { id: userId} = req.user
     const { id } = req.params
@@ -68,6 +105,7 @@ async function DeleteMonitor(req, res) {
     catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
+    await restartScheduler()
 }
 
 async function CreateMonitor(req, res) {
@@ -157,6 +195,7 @@ async function ManualCheck(req, res) {
 
 export {
     ListAllMonitor,
+    UpdateMonitor,
     DeleteMonitor,
     CreateMonitor,
     ListMonitorChecks,

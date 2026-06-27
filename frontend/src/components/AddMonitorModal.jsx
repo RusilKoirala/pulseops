@@ -27,9 +27,27 @@ const PRESETS = [
   { label: "1d", seconds: 86400 },
 ]
 
-export function AddMonitorModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ name: "", url: "", notificationsEnabled: true, teamId: "" })
-  const [intervalInput, setIntervalInput] = useState("5m")
+export function AddMonitorModal({ monitor, onClose, onCreated, onUpdated }) {
+  const isEdit = !!monitor
+  
+  const [form, setForm] = useState({ 
+    name: monitor?.name || "", 
+    url: monitor?.url || "", 
+    notificationsEnabled: monitor?.notificationsEnabled ?? true, 
+    teamId: monitor?.teamId || "" 
+  })
+  
+  // Initialize interval input
+  const [intervalInput, setIntervalInput] = useState(() => {
+    if (monitor?.interval) {
+      const seconds = monitor.interval
+      if (seconds % 86400 === 0) return `${seconds / 86400}d`
+      else if (seconds % 3600 === 0) return `${seconds / 3600}h`
+      else return `${seconds / 60}m`
+    }
+    return "5m"
+  })
+  
   const [loading, setLoading] = useState(false)
   const [teams, setTeams] = useState([])
 
@@ -89,9 +107,18 @@ export function AddMonitorModal({ onClose, onCreated }) {
     try {
       const payload = { ...form, interval }
       if (!payload.teamId) delete payload.teamId
-      await api.post("/monitors", payload)
-      toast.success("Monitor added!")
-      onCreated()
+      
+      if (isEdit) {
+        // Edit mode: don't allow changing team
+        delete payload.teamId
+        await api.put(`/monitors/${monitor.id}`, payload)
+        toast.success("Monitor updated!")
+        onUpdated()
+      } else {
+        await api.post("/monitors", payload)
+        toast.success("Monitor added!")
+        onCreated()
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong")
     } finally {
@@ -106,7 +133,7 @@ export function AddMonitorModal({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl">
-        <h2 className="text-lg font-semibold mb-1">Add Monitor</h2>
+        <h2 className="text-lg font-semibold mb-1">{isEdit ? "Edit Monitor" : "Add Monitor"}</h2>
         <p className="text-sm text-muted-foreground mb-4">We'll ping your URL on the interval you set.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -130,7 +157,7 @@ export function AddMonitorModal({ onClose, onCreated }) {
             />
           </div>
 
-          {teams.length > 0 && (
+          {!isEdit && teams.length > 0 && (
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">Save to</label>
               <select
@@ -202,7 +229,7 @@ export function AddMonitorModal({ onClose, onCreated }) {
           <div className="flex gap-2 mt-2">
             <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="flex-1" disabled={loading}>
-              {loading ? "Adding..." : "Add Monitor"}
+              {loading ? (isEdit ? "Saving..." : "Adding...") : (isEdit ? "Save Changes" : "Add Monitor")}
             </Button>
           </div>
         </form>

@@ -17,7 +17,7 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
   squareSize = 4,
   gridGap = 6,
   flickerChance = 0.3,
-  color = "rgb(0, 0, 0)",
+  color = "currentColor",
   width,
   height,
   className,
@@ -32,8 +32,26 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
   const memoizedColor = useMemo(() => {
     const toRGBA = (color: string) => {
       if (typeof window === "undefined") {
-        return `rgba(0, 0, 0,`
+        return `rgba(150, 150, 150,`
       }
+      
+      if (color === "currentColor") {
+        // Create a temp element to get currentColor from DOM
+        const tempEl = document.createElement("div")
+        tempEl.style.color = "inherit"
+        document.body.appendChild(tempEl)
+        const computedColor = getComputedStyle(tempEl).color
+        document.body.removeChild(tempEl)
+        
+        // Parse rgb(r,g,b) or rgba(r,g,b,a)
+        const match = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+        if (match) {
+          return `rgba(${match[1]}, ${match[2]}, ${match[3]},`
+        }
+        
+        return `rgba(150, 150, 150,`
+      }
+      
       const canvas = document.createElement("canvas")
       canvas.width = canvas.height = 1
       const ctx = canvas.getContext("2d")
@@ -180,7 +198,7 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn(`h-full w-full ${className}`)}
+      className={cn(`h-full w-full text-neutral-400 ${className}`)}
       {...props}
     >
       <canvas
