@@ -6,6 +6,8 @@ import 'dotenv/config'
 import monitorRoutes from "./src/routes/monitor.js"
 import { startSchedular } from "./src/services/checker.js"
 import userRoutes from "./src/routes/user.js"
+import teamRoutes from "./src/routes/team.js"
+
 
 const app = express();
 
@@ -41,6 +43,8 @@ app.get("/healthz", async (req,res)=> {
 
 app.use("/api/monitors", monitorRoutes)
 app.use("/api/users", userRoutes)
+app.use("/api/teams",teamRoutes)
+
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT,  async()=>{
