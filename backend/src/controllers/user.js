@@ -77,7 +77,9 @@ async function Login(req, res) {
         res.cookie("token", jwt_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
 
         res.json({ success: true, data: userWithoutDetail })
@@ -90,7 +92,11 @@ async function Delete(req, res) {
     const { id } = req.user
     try {
         await db.delete(user).where(eq(user.id, id)).returning()
-        res.clearCookie("token")
+        res.clearCookie("token", {
+            path: "/",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: process.env.NODE_ENV === "production",
+        })
         res.json({ success: true, message: "Successfully Deleted" })
     } catch (error) {
         res.status(500).json({ success: false, message: error.message })
@@ -99,7 +105,11 @@ async function Delete(req, res) {
 
 async function Logout(req, res) {
     try {
-        res.clearCookie("token")
+        res.clearCookie("token", {
+            path: "/",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: process.env.NODE_ENV === "production",
+        })
         res.json({ success: true, message: "Logged out successfully" })
     } catch (error) {
         res.json({ success: false, message: error.message })
@@ -217,7 +227,9 @@ async function DemoLogin(req,res) {
         res.cookie("token", jwt_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
         const {password:_, id:_id, ...safe}= demoUser
         res.json({
