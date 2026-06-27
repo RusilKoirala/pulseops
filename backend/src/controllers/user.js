@@ -12,6 +12,8 @@ const CreateUserSchema = z.object({
     password: z.string().min(6),
 })
 
+
+
 async function Signup(req, res) {
     const {name , email, password } = CreateUserSchema.parse(req.body)
 
