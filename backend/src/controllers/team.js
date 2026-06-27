@@ -1,16 +1,13 @@
-import { eq, and, desc} from "drizzle-orm"
+import { eq, and, desc } from "drizzle-orm"
 import db from "../lib/db.js"
-import { teams, teamMemebers, user,monitors } from "../db/schema.js"
-import {date, email, success, z} from "zod"
-
-
-// -- input validation :) --
+import { teams, teamMembers, user, monitors } from "../db/schema.js"
+import { z } from "zod"
 
 const CreateTeamSchema = z.object({
     name: z.string().min(1),
 })
 
-const InviteTeamMembersSchema = z.object({
+const InviteTeamMemberSchema = z.object({
     email: z.string().email(),
     role: z.enum(["admin", "member"]).default("member"),
 })
@@ -19,339 +16,216 @@ const UpdateTeamMemberRoleSchema = z.object({
     role: z.enum(["owner", "admin", "member"]),
 })
 
-
-// --- functions of team controller ---
-
-// creat team
+// Create a new team
 export async function createTeam(req, res) {
     const { name } = CreateTeamSchema.parse(req.body)
-    const {id: userId} = req.user
+    const { id: userId } = req.user
 
     try {
-        const [newTeam] = await db.insert(teams).values({
-            name: name,
-            createdBy: userId,
-        }).returning()
+        const [newTeam] = await db.insert(teams).values({ name, createdBy: userId }).returning()
 
-        // make the user its owner
-        await db.insert(teamMemebers).values({
+        // Add creator as owner
+        await db.insert(teamMembers).values({
             teamId: newTeam.id,
             userId: userId,
-            role: "owner",
+            role: "owner"
         })
 
-        res.status(201).json({ 
-            success: true,
-            data: newTeam,
-        })
-
+        res.status(201).json({ success: true, data: newTeam })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error,
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// List User
-export async function listUserTeams(req,res) {
-    const {id: userId} = req.user
+// List all teams user is part of
+export async function listUserTeams(req, res) {
+    const { id: userId } = req.user
 
     try {
-        const memberships = (await db.select().from(teamMemebers)).where(eq(teamMemebers.userId, userId))
+        const memberships = await db.select().from(teamMembers).where(eq(teamMembers.userId, userId))
         const teamIds = memberships.map(m => m.teamId)
 
-        if(teamIds.length===0) {
-            return res.json({
-                success:false,
-                data: [],
-            })
+        if (teamIds.length === 0) {
+            return res.json({ success: true, data: [] })
         }
 
-        const userTeams = await db.select().from(teams).where(eq(teams.id, teamIds[0]))
-
-        for (let i=1; i<teamIds.length; i++) {
-            const moreTeams = await db.select().from(teams).where(eq(teams.id, teamIds[i]))
-            userTeams.push(...moreTeams)
+        const userTeams = []
+        for (const tid of teamIds) {
+            const [t] = await db.select().from(teams).where(eq(teams.id, tid))
+            if (t) userTeams.push(t)
         }
 
         const teamsWithMembership = userTeams.map(team => {
-            const membership = memberships.find(m=> m.teamId === team.id)
+            const membership = memberships.find(m => m.teamId === team.id)
             return { ...team, role: membership.role }
         })
-        res.json({success: true, data: teamsWithMembership})
+
+        res.json({ success: true, data: teamsWithMembership })
     } catch (error) {
-        res.status(500).json({
-            success:false,
-            message: error.message
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// get team details and member 
-export async function getTeam(req,res) {
+// Get team details and members
+export async function getTeam(req, res) {
     const { teamId } = req.params
     const { id: userId } = req.user
 
     try {
-        // check if user in team 
-        const [membership] = await db.select().from(teamMemebers).where(
-            and(
-                eq(teamMemebers.id, teamId),
-                eq(teamMemebers.userId, userId)
-            )
+        // Check if user is in team
+        const [membership] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
         )
-
-        if (!membership)
-        {
-            return res.status(403).json({ 
-                success: false,
-                message: "Not a team member",
-            })
+        if (!membership) {
+            return res.status(403).json({ success: false, message: "Not a team member" })
         }
 
-        const [team] = await db.select().from(teams).where(eq(teams.id,teamId))
-
-        const members = await db.select
-        ({
-            id: teamMemebers.id,
-            userId: teamMemebers.userId,
-            role: teamMemebers.role,
-            joinedAt: teamMemebers.jointedAt,
+        const [team] = await db.select().from(teams).where(eq(teams.id, teamId))
+        const members = await db.select({
+            id: teamMembers.id,
+            userId: teamMembers.userId,
+            role: teamMembers.role,
+            joinedAt: teamMembers.joinedAt,
             name: user.name,
-            email: user.email,
-        }).from(
-            teamMemebers.innerJoin(
-                user, eq(
-                    teamMemebers.userId, user.id
-                ).where(eq(
-                    teamMemebers.teamId, teamId
-                ))
-            )
-        )
+            email: user.email
+        }).from(teamMembers)
+            .innerJoin(user, eq(teamMembers.userId, user.id))
+            .where(eq(teamMembers.teamId, teamId))
 
-        res.json({
-            success: true,
-            data: {
-                team,
-                members,
-                currentUserRole: membership.role
-            }
-        })
-
+        res.json({ success: true, data: { team, members, currentUserRole: membership.role } })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// invite to team
+// Invite member to team
 export async function inviteToTeam(req, res) {
-    const {teamId} = req.params
-    const {email, role} = InviteTeamMembersSchema.parse(req.body)
-
-    const {id: userId} = req.user
+    const { teamId } = req.params
+    const { email, role } = InviteTeamMemberSchema.parse(req.body)
+    const { id: userId } = req.user
 
     try {
-        // check if he has permission (owner/ admin)
-        const [membership] = await db.select().from(teamMemebers).where(
-            and(
-                eq(teamMemebers.teamId, teamId),
-                eq(teamMemebers.userId, userId)
-            )
+        // Check if current user has permission (owner/admin)
+        const [membership] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
         )
         if (!membership || !["owner", "admin"].includes(membership.role)) {
-            return res.status(403).json({
-                success:false,
-                message:"Not authorized",
-            })
+            return res.status(403).json({ success: false, message: "Not authorized" })
         }
-        const [invitedUser] = await db.select().from(user).where(
-            eq(user.email, email)
+
+        // Find user by email
+        const [invitedUser] = await db.select().from(user).where(eq(user.email, email))
+        if (!invitedUser) {
+            return res.status(404).json({ success: false, message: "User not found" })
+        }
+
+        // Check if already in team
+        const [existing] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, invitedUser.id))
         )
-
-        if(!invitedUser) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            })
+        if (existing) {
+            return res.status(400).json({ success: false, message: "User already in team" })
         }
 
-        const [existing] = await db.select().from(teamMemebers)
-            .where(
-                and(
-                    eq(teamMemebers.teamId, teamId),
-                    eq(teamMemebers.userId, invitedUser.id)
-                )
-            )
-        if (existing) 
-        {
-            return res.json(400).json({
-                success: false,
-                message: "User already in team"
-            })
-        }
-
-        const [newMember]= await db.insert(teamMemebers).values({
+        // Add to team
+        const [newMember] = await db.insert(teamMembers).values({
             teamId,
             userId: invitedUser.id,
-            role,
-        })
+            role
+        }).returning()
 
-        res.json({success: true, data: newMember})
-
+        res.json({ success: true, data: newMember })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
-
 }
 
-
-// update member role (PROMOTION :D)
-export async function updateTeamMemberRole(req ,res ) {
-    const {teamId, memberId} = req.params
+// Update member role
+export async function updateTeamMemberRole(req, res) {
+    const { teamId, memberId } = req.params
     const { role } = UpdateTeamMemberRoleSchema.parse(req.body)
-    const {id: userId} = req.user
+    const { id: userId } = req.user
 
     try {
-        const [membership] = await db.select().from(teamMemebers).where(
-            and(
-                eq(teamMemebers.teamId, teamId),
-                eq(teamMemebers.userId, userId)
-            )
+        // Check if current user is owner
+        const [membership] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
         )
-
         if (!membership || membership.role !== "owner") {
-            return res.status(403).json({
-                success: false,
-                message: "Only owner can change roles"
-            })
+            return res.status(403).json({ success: false, message: "Only owner can change roles" })
         }
 
-        const [updated] = await db.update(teamMemebers).set({role}).where(
-            and(eq(teamMemebers.teamId, teamId),
-                eq(teamMemebers.id, memberId)
-            )
+        // Update member role
+        const [updated] = await db.update(teamMembers).set({ role }).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.id, memberId))
         ).returning()
 
-        res.json({ success: true, data: updated})
+        res.json({ success: true, data: updated })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-
-// remove memver from team
-export async function removeTeamMember(req,res) {
+// Remove member from team
+export async function removeTeamMember(req, res) {
     const { teamId, memberId } = req.params
     const { id: userId } = req.user
 
     try {
-        // check if he not bad boy (is he admin or owner??)
-        const [membership] = await db.select().from(teamMemebers)
-            .where(
-                and(
-                    eq(teamMemebers.teamId, teamId),
-                    eq(teamMemebers.userId, userId)
-                )
-            )
-        
-        if (!membership) {
-            return res.status(404).json({
-                success: false,
-                message: "Member not found"
-            })
-        }
-
-        const [membertoRemove] = await db.select().from(
-            (teamMemebers).where(
-                and(
-                    eq(teamMemebers.teamId, teamId), eq(teamMemebers.id, memberId),
-                    eq(teamMemebers.id,memberId)
-                )
-            )
+        // Check permission
+        const [membership] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
         )
-        if(!membertoRemove) {
-            return res.status(404).json({
-                success: false,
-                message: "Member not found"
-            })
+        if (!membership) {
+            return res.status(403).json({ success: false, message: "Not a team member" })
         }
 
-
-        // pls dont remove admin
-        if( membertoRemove.role === "owner") 
-        {
-            return res.status(400).json({
-                success: false,
-                message: "Cannot remove owner"
-            })
+        // Get member to remove
+        const [memberToRemove] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.id, memberId))
+        )
+        if (!memberToRemove) {
+            return res.status(404).json({ success: false, message: "Member not found" })
         }
 
-        const canRemove = membership.role === "owner" || membership.role("admin") || membertoRemove.userId === userId
+        // Can't remove owner
+        if (memberToRemove.role === "owner") {
+            return res.status(400).json({ success: false, message: "Cannot remove owner" })
+        }
+
+        // Check if current user is owner/admin OR removing themselves
+        const canRemove = membership.role === "owner" ||
+            membership.role === "admin" ||
+            memberToRemove.userId === userId
 
         if (!canRemove) {
-            return res.status(403).json({
-                success: false,
-                message: "Not authorized"
-            })
+            return res.status(403).json({ success: false, message: "Not authorized" })
         }
 
-        await db.delete(teamMemebers).where(
-            eq(teamMemebers.id, memberId)
-        )
-
-        res.json({
-            success:true,
-            message: "Member Removed"
-        })
-    } catch( error ) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        })
+        await db.delete(teamMembers).where(eq(teamMembers.id, memberId))
+        res.json({ success: true, message: "Member removed" })
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// delete teamm
+// Delete team
 export async function deleteTeam(req, res) {
     const { teamId } = req.params
     const { id: userId } = req.user
-    
+
     try {
-        
-        const [membership] = await db.select().from(teamMemebers)
-            .where(
-                and(
-                    eq(teamMemebers.id, teamId),
-                    eq(teamMemebers.userId, userId)
-                )
-            )
+        // Check if owner
+        const [membership] = await db.select().from(teamMembers).where(
+            and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
+        )
         if (!membership || membership.role !== "owner") {
-            return res.status(403).json({
-                success: false,
-                message: "Only the owner can delete team"
-            })
+            return res.status(403).json({ success: false, message: "Only owner can delete team" })
         }
 
         await db.delete(teams).where(eq(teams.id, teamId))
-
-        res.json({
-            success:true,
-            message: "Team deleted",
-        })
+        res.json({ success: true, message: "Team deleted" })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        })
+        res.status(500).json({ success: false, message: error.message })
     }
 }

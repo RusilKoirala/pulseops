@@ -1,10 +1,12 @@
 import express from "express"
 import {authMiddleware} from  "../middleware/auth.js"
 
-import { createTeam, listUserTeams, getTeam, inviteToTeam, removeTeamMember,updateTeamMemberRole, deleteTeam } from "../controllers/team"
+import { createTeam, listUserTeams, getTeam, inviteToTeam, removeTeamMember,updateTeamMemberRole, deleteTeam } from "../controllers/team.js"
 
 
 const router = express.Router()
+
+router.use(authMiddleware)
 
 // CREATEEEE USER
 router.post("/",createTeam);

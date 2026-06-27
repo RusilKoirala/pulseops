@@ -1,7 +1,6 @@
-import {eq, desc, and} from "drizzle-orm"
+import {eq, desc, and, or, inArray} from "drizzle-orm"
 import db from "../lib/db.js"
-
-import { monitors, monitorChecks } from "../db/schema.js"
+import { monitors, monitorChecks, teamMembers } from "../db/schema.js"
 import { z } from "zod"
 import { restartScheduler } from "../services/checker.js"
 import { performHealthCheck } from "../services/checker.js"
@@ -11,15 +10,31 @@ const CreateMonitorSchema = z.object({
     url: z.string().url(),
     interval: z.number().min(300).max(86400),
     notificationsEnabled: z.boolean().default(true),
+    teamId: z.string().optional(),
 })
-
 
 async function ListAllMonitor(req, res) {
     const {id : userId } = req.user
     try {
-        const allMonitors = await db.select().from(monitors)
-        .where(eq(monitors.userId, userId))
-        .orderBy(desc(monitors.createdAt))
+        // Get all team IDs user is part of
+        const userTeams = await db.select().from(teamMembers).where(eq(teamMembers.userId, userId))
+        const teamIds = userTeams.map(t => t.teamId)
+
+        // Get personal monitors AND team monitors
+        let allMonitors
+        if (teamIds.length > 0) {
+            allMonitors = await db.select().from(monitors)
+                .where(or(
+                    eq(monitors.userId, userId),
+                    inArray(monitors.teamId, teamIds)
+                ))
+                .orderBy(desc(monitors.createdAt))
+        } else {
+            allMonitors = await db.select().from(monitors)
+                .where(eq(monitors.userId, userId))
+                .orderBy(desc(monitors.createdAt))
+        }
+        
         res.json({ success: true, data: allMonitors })  
     }
     catch (error) {
@@ -27,13 +42,27 @@ async function ListAllMonitor(req, res) {
     }
 }
 
-
 async function DeleteMonitor(req, res) {
     const { id: userId} = req.user
     const { id } = req.params
 
     try {
-        const deletedMonitor = await db.delete(monitors).where(and(eq(monitors.id,id), eq(monitors.userId,userId)))
+        // Get monitor first
+        const [monitor] = await db.select().from(monitors).where(eq(monitors.id, id))
+        if (!monitor) return res.status(404).json({ success: false, message: "Monitor not found" })
+
+        // Check access
+        let hasAccess = monitor.userId === userId
+        if (!hasAccess && monitor.teamId) {
+            const [membership] = await db.select().from(teamMembers).where(
+                and(eq(teamMembers.teamId, monitor.teamId), eq(teamMembers.userId, userId))
+            )
+            hasAccess = !!membership
+        }
+
+        if (!hasAccess) return res.status(403).json({ success: false, message: "Not authorized" })
+
+        const deletedMonitor = await db.delete(monitors).where(eq(monitors.id, id))
         res.json({ success: true, data: deletedMonitor })
     }
     catch (error) {
@@ -41,12 +70,26 @@ async function DeleteMonitor(req, res) {
     }
 }
 
-
 async function CreateMonitor(req, res) {
-    const { name, url, interval, notificationsEnabled } = CreateMonitorSchema.parse(req.body)
+    const { name, url, interval, notificationsEnabled, teamId } = CreateMonitorSchema.parse(req.body)
     const { id: userId} = req.user
     try {
-        const [newMonitor] = await db.insert(monitors).values({ name, url, interval, userId, notificationsEnabled }).returning()
+        let monitorData = { name, url, interval, notificationsEnabled }
+        
+        if (teamId) {
+            // Check if user is in team
+            const [membership] = await db.select().from(teamMembers).where(
+                and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
+            )
+            if (!membership) {
+                return res.status(403).json({ success: false, message: "Not a team member" })
+            }
+            monitorData.teamId = teamId
+        } else {
+            monitorData.userId = userId
+        }
+
+        const [newMonitor] = await db.insert(monitors).values(monitorData).returning()
         res.status(201).json({ success: true, data: newMonitor })
     }
     catch (error) {
@@ -55,21 +98,17 @@ async function CreateMonitor(req, res) {
     await restartScheduler()
 }
 
-
 async function ListMonitorChecks(req, res) {
     const { id } = req.params
 
     try {
         const checks = await db.select().from(monitorChecks).where(eq(monitorChecks.monitorId, id)).orderBy(desc(monitorChecks.checkedAt)).limit(50)
         res.json({ success: true, data: checks })
-
     }
     catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
 }
-
-
 
 async function MonitorStatus(req, res) {
     const { id } = req.params
@@ -115,8 +154,6 @@ async function ManualCheck(req, res) {
         res.status(500).json({ success: false, message: error.message })
     }
 }
-
-
 
 export {
     ListAllMonitor,

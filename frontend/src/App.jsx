@@ -13,6 +13,7 @@ import { Signup } from "./pages/Signup"
 import { VerifyEmail } from "./pages/VerifyEmail"
 import { Demo } from "./pages/Demo"
 import { Landing } from "./pages/Landing"
+import { Teams } from "./pages/Teams"
 
 function App() {
   
@@ -38,6 +39,7 @@ function App() {
               <Settings />
             </ProtectedRoute>
           } />
+          <Route path="/teams" element={<Teams/>}/>
           <Route path="/verify-email" element={<VerifyEmail/>}/>
           <Route path="/demo" element={<Demo/>}/>
           <Route path="/signup" element={<Signup/>}/>
