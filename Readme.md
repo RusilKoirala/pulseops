@@ -77,10 +77,14 @@ pulseops/
 ## AI Usage 
 
 - Backend: All written by me, no ai 
+
 - Frontend:
     - Used Ai to build some pages 
     - Helped me to debugged
     - Reviewed frontend code
+
+- I used Ai for deploying it in vps
+
 **NOTE**
 ```
 - Used shadcn components

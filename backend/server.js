@@ -16,8 +16,20 @@ app.use(express.json())
 
 
 // Cors setting
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
   credentials: true,
 }))
 
@@ -48,7 +60,7 @@ app.use("/api/teams",teamRoutes)
 app.use("/api/status-pages", statusPageRoutes)
 
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5000
 app.listen(PORT,  async()=>{
     console.log(`Server is running at port http://localhost:${PORT}`)
     await startSchedular()
