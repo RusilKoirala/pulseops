@@ -45,3 +45,36 @@ export const monitorChecks = pgTable("monitor_checks", {
   responseTime: text("response_time").notNull(),
   checkedAt: timestamp("checked_at").defaultNow().notNull(),
 })
+
+// status pagee
+export const statusPages = pgTable("status_pages", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  monitorId: text("monitor_id").notNull().references(() => monitors.id, { onDelete: "cascade" }),
+  customDomain: text("custom_domain"),
+  title: text("title").notNull(),
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").default("#3b82f6"),
+  isPublic: boolean("is_public").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+// Incidents
+export const incidents = pgTable("incidents", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  monitorId: text("monitor_id").notNull().references(() => monitors.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("investigating"),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+})
+
+// incidents updates
+export const incidentUpdates = pgTable("incident_updates", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  incidentId: text("incident_id").notNull().references(() => incidents.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
