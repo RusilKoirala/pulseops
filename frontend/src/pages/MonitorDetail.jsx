@@ -12,6 +12,8 @@ import { Globe, ExternalLink, Pencil } from "lucide-react"
 
 
 
+
+
 export function MonitorDetail() {
     const {id}= useParams()
     const navigate = useNavigate()

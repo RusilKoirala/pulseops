@@ -5,7 +5,7 @@ _in short : A platform to see if your site is up and running or not :)_
 ![Picture](./pictures/Hero.png)
 ## Overview
 
-Pulseops is a fullstack project to help to track down site uptime and downtime. It supports live monitoring dashboard, instant alerts, response time charts, manual health checks, jwt secure signin. 
+Pulseops is a fullstack project to help to track down site uptime and downtime. It supports live monitoring dashboard, instant alerts, response time charts, manual health checks, jwt secure signin. User can also add team members and give them roles (i.e Admin, Member). User can create a public endpoint where general audience can monitor their data in a good ui :)
 
 ![Globe](./pictures/Earth.png)
 

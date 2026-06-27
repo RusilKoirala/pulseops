@@ -10,7 +10,6 @@ import { AnimatedList } from "@/components/ui/animated-list"
 // ─────────────────────────────────────────────────────────────────────────────
 // Bento backgrounds — each fills the flex-1 container naturally.
 // BentoCard has a gradient-to-transparent fade at the bottom of the background
-// slot so content blends cleanly into the icon/text section below.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MONITORS = [
